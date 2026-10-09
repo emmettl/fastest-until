@@ -1,0 +1,706 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Pick a computer, send it back in time, and see the last year it would have been the fastest machine in the world.">
+<title>Fastest Until</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,300..900&family=Courier+Prime:wght@400;700&display=swap">
+<style>
+/* Layout: a sheet of tractor-feed line-printer paper. Picker on the left, the verdict and
+   its chart on the right, and the record holders printed out underline as green-bar listing. */
+:root {
+  --paper: #fbfcf8;
+  --desk: #e8ebe4;
+  --bar: #e1eedd;
+  --ink: #1b2320;
+  --muted: #5b6a62;
+  --rule: #c8d5ca;
+  --pen: #2445ae;
+  --pen-soft: rgba(36, 69, 174, 0.1);
+  --hi: rgba(255, 221, 64, 0.55);
+  --hole: #dfe3dc;
+  --display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --body: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --mono: "Courier Prime", "Courier New", ui-monospace, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #141a17; --desk: #0c100e; --bar: #1a2620; --ink: #e2eae4; --muted: #8fa198;
+    --rule: #2b3a32; --pen: #93abff; --pen-soft: rgba(147, 171, 255, 0.12);
+    --hi: rgba(222, 186, 40, 0.32); --hole: #0a0d0b; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #141a17; --desk: #0c100e; --bar: #1a2620; --ink: #e2eae4; --muted: #8fa198;
+  --rule: #2b3a32; --pen: #93abff; --pen-soft: rgba(147, 171, 255, 0.12);
+  --hi: rgba(222, 186, 40, 0.32); --hole: #0a0d0b; color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--desk);
+  color: var(--ink);
+  font-family: var(--body);
+  font-size: 15px;
+  line-height: 1.5;
+  padding: 24px 16px 48px;
+}
+.sheet {
+  position: relative;
+  max-width: 1120px;
+  margin: 0 auto;
+  background: var(--paper);
+  padding-block: 36px 40px;
+  padding-inline: 64px;
+  box-shadow: 0 1px 2px rgba(0,0,0,.06), 0 12px 40px -18px rgba(0,0,0,.25);
+}
+/* tractor-feed margins */
+.sheet::before, .sheet::after {
+  content: "";
+  position: absolute;
+  top: 0; bottom: 0;
+  width: 36px;
+  background-image: radial-gradient(circle at 50% 50%, var(--hole) 0 5px, transparent 5.5px);
+  background-size: 36px 24px;
+  border-color: var(--rule);
+  border-style: dashed;
+  border-width: 0;
+}
+.sheet::before { left: 0; border-right-width: 1px; }
+.sheet::after { right: 0; border-left-width: 1px; }
+
+header { display: grid; gap: 8px; margin-bottom: 28px; }
+.kicker {
+  font-family: var(--mono);
+  font-size: 13px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+h1 {
+  margin: 0;
+  font-family: var(--display);
+  font-stretch: 125%;
+  font-weight: 900;
+  font-size: clamp(38px, 7vw, 72px);
+  line-height: .95;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+.lede { margin: 4px 0 0; max-width: 60ch; color: var(--muted); font-size: 17px; }
+
+.layout {
+  display: grid;
+  grid-template-columns: minmax(0, 300px) minmax(0, 1fr);
+  gap: 40px;
+  align-items: start;
+}
+
+/* ---------- picker ---------- */
+.picker { display: grid; gap: 20px; }
+.label {
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 0 0 8px;
+}
+.seg {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border: 1px solid var(--ink);
+}
+.seg button {
+  font: 600 13px/1.25 var(--body);
+  padding: 8px 10px;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+  text-align: left;
+}
+.seg button + button { border-left: 1px solid var(--ink); }
+.seg button small { display: block; font-weight: 400; color: var(--muted); font-size: 12px; }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+.seg button[aria-pressed="true"] small { color: var(--paper); opacity: .75; }
+
+.list { display: grid; border-top: 1px solid var(--rule); }
+.item {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2px 12px;
+  align-items: baseline;
+  padding: 9px 8px;
+  border: 0;
+  border-bottom: 1px solid var(--rule);
+  background: transparent;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+}
+.item:hover { background: var(--pen-soft); }
+.item .nm { font-weight: 650; font-size: 14px; }
+.item .yr { font-family: var(--mono); font-size: 13px; color: var(--muted); }
+.item .sp { grid-column: 1 / -1; font-size: 12.5px; color: var(--muted); line-height: 1.35; }
+.item[aria-pressed="true"] { background: var(--pen-soft); box-shadow: inset 3px 0 0 var(--pen); }
+.item[aria-pressed="true"] .nm { color: var(--pen); }
+.tag {
+  font-family: var(--mono); font-size: 11px; letter-spacing: .06em; text-transform: uppercase;
+  color: var(--pen); margin-left: 6px; font-weight: 700;
+}
+
+.box { border: 1px solid var(--rule); padding: 12px; display: grid; gap: 10px; }
+.box.active { border-color: var(--pen); box-shadow: inset 3px 0 0 var(--pen); }
+.row { display: flex; gap: 8px; flex-wrap: wrap; }
+.row > * { min-width: 0; }
+input[type="number"], select {
+  font: 15px var(--mono);
+  padding: 7px 8px;
+  border: 1px solid var(--rule);
+  background: var(--paper);
+  color: var(--ink);
+  border-radius: 0;
+}
+input[type="number"] { flex: 1 1 90px; width: 90px; }
+select { flex: 0 1 auto; }
+.btn {
+  font: 650 14px var(--body);
+  padding: 9px 12px;
+  border: 1px solid var(--ink);
+  background: var(--ink);
+  color: var(--paper);
+  cursor: pointer;
+}
+.btn.ghost { background: transparent; color: var(--ink); }
+.btn:disabled { opacity: .55; cursor: progress; }
+.hint { font-size: 12.5px; color: var(--muted); margin: 0; line-height: 1.4; }
+:focus-visible { outline: 2px solid var(--pen); outline-offset: 2px; }
+
+/* ---------- verdict ---------- */
+.verdict { display: grid; gap: 14px; min-width: 0; }
+.subject { font-family: var(--mono); font-size: 14px; color: var(--muted); }
+.subject b { color: var(--ink); }
+.big {
+  margin: 0;
+  font-family: var(--display);
+  font-weight: 800;
+  font-stretch: 100%;
+  font-size: clamp(22px, 3vw, 30px);
+  line-height: 1.1;
+  text-wrap: balance;
+}
+.year {
+  display: inline-block;
+  font-stretch: 125%;
+  font-weight: 900;
+  font-size: clamp(76px, 13vw, 150px);
+  line-height: .85;
+  letter-spacing: -0.03em;
+  color: var(--pen);
+  background: linear-gradient(transparent 58%, var(--hi) 58%, var(--hi) 92%, transparent 92%);
+  padding: 0 .06em;
+  margin-top: 4px;
+  font-variant-numeric: tabular-nums;
+}
+.year.word { font-size: clamp(52px, 9vw, 104px); }
+.story { margin: 0; font-size: 17px; max-width: 62ch; }
+.story em { font-style: normal; font-weight: 700; }
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border-top: 1px solid var(--ink);
+  border-bottom: 1px solid var(--rule);
+}
+.stat { padding: 10px 12px 12px 0; min-width: 0; }
+.stat + .stat { padding-left: 14px; border-left: 1px solid var(--rule); }
+.stat .v {
+  font-family: var(--display); font-stretch: 112%; font-weight: 800; font-size: 26px;
+  font-variant-numeric: tabular-nums; line-height: 1.1;
+}
+.stat .k { font-size: 12.5px; color: var(--muted); line-height: 1.35; margin-top: 2px; }
+
+.chartwrap { overflow-x: auto; margin-top: 6px; }
+#chart { display: block; width: 100%; min-width: 520px; height: auto; }
+#chart text { font-family: var(--mono); font-size: 11px; fill: var(--muted); }
+#chart .grid { stroke: var(--rule); stroke-width: 1; fill: none; }
+#chart .era { fill: var(--bar); }
+#chart .step { stroke: var(--ink); stroke-width: 1.75; fill: none; }
+#chart .dot { fill: var(--paper); stroke: var(--ink); stroke-width: 1.25; }
+#chart .you { stroke: var(--pen); stroke-width: 2; stroke-dasharray: 6 4; fill: none; }
+#chart .hl { fill: var(--hi); }
+#chart .hit { fill: var(--pen); }
+#chart .hitlabel { fill: var(--pen); font-weight: 700; font-size: 12px; }
+#chart .mile { fill: var(--ink); font-size: 10.5px; }
+#chart .eralabel { fill: var(--muted); font-size: 10.5px; letter-spacing: .06em; }
+
+/* ---------- printout ---------- */
+.printout { margin-top: 44px; }
+.printout h2 {
+  font-family: var(--display); font-stretch: 112%; font-weight: 800; font-size: 22px;
+  margin: 0 0 4px;
+}
+.printout .hint { margin-bottom: 14px; max-width: 70ch; }
+.tablewrap { overflow-x: auto; border-top: 2px solid var(--ink); }
+table { width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: 14px; min-width: 560px; }
+th {
+  text-align: left; font-weight: 700; font-size: 12px; letter-spacing: .08em; text-transform: uppercase;
+  padding: 8px 10px; border-bottom: 1px solid var(--ink);
+}
+td { padding: 5px 10px; white-space: nowrap; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+tbody tr.band td { background: var(--bar); }
+tr.divider td {
+  background: transparent !important; color: var(--muted); font-size: 12px; letter-spacing: .06em;
+  padding-top: 14px; border-bottom: 1px dashed var(--rule);
+}
+tr.yours td {
+  background: var(--pen-soft) !important; color: var(--pen); font-weight: 700;
+  border-top: 2px solid var(--pen); border-bottom: 2px solid var(--pen);
+}
+tr.beat td:nth-child(2) { background-image: linear-gradient(transparent 20%, var(--hi) 20%, var(--hi) 85%, transparent 85%); }
+
+footer { margin-top: 32px; font-size: 12.5px; color: var(--muted); max-width: 80ch; display: grid; gap: 6px; }
+footer p { margin: 0; }
+
+@media (max-width: 860px) {
+  .layout { grid-template-columns: minmax(0, 1fr); gap: 28px; }
+  .verdict { order: -1; }
+}
+@media (max-width: 560px) {
+  body { padding: 0 0 24px; }
+  .sheet { padding-inline: 34px; padding-block: 24px 28px; box-shadow: none; }
+  .sheet::before, .sheet::after { width: 18px; background-size: 18px 18px;
+    background-image: radial-gradient(circle at 50% 50%, var(--hole) 0 3.5px, transparent 4px); }
+  .stats { grid-template-columns: minmax(0, 1fr); }
+  .stat + .stat { padding-left: 0; border-left: 0; border-top: 1px solid var(--rule); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .year { transition: color .2s; }
+}
+</style>
+</head>
+<body>
+
+<div class="sheet">
+  <header>
+    <div class="kicker">TOP500 time machine · Linpack, 1941–2026</div>
+    <h1>Fastest Until</h1>
+    <p class="lede">Pick a computer and send it back in time. This works out the last year it would still have been the fastest computer in the world.</p>
+  </header>
+
+  <div class="layout">
+    <section class="picker" aria-label="Choose a computer">
+      <div>
+        <p class="label">Count flops the way</p>
+        <div class="seg" role="group" aria-label="Measurement">
+          <button id="mode-fp64" type="button" aria-pressed="true">TOP500 does<small>FP64, sustained</small></button>
+          <button id="mode-fp32" type="button" aria-pressed="false">Marketing does<small>FP32 GPU, peak</small></button>
+        </div>
+      </div>
+
+      <div>
+        <p class="label">Computer</p>
+        <div class="list" id="list"></div>
+      </div>
+
+      <div class="box" id="bench-box">
+        <p class="label" style="margin:0">Measure this device</p>
+        <p class="hint">Runs double-precision multiply-adds in JavaScript on every CPU core for about two seconds. The browser is slower than native code, so treat it as a floor.</p>
+        <div class="row"><button class="btn" id="bench" type="button">Run benchmark</button></div>
+        <p class="hint" id="bench-out" aria-live="polite"></p>
+      </div>
+
+      <div class="box" id="custom-box">
+        <p class="label" style="margin:0">Or type a number</p>
+        <div class="row">
+          <input id="custom-val" type="number" min="0" step="any" value="1" aria-label="Speed">
+          <select id="custom-unit" aria-label="Unit">
+            <option value="1e3">kFLOPS</option>
+            <option value="1e6">MFLOPS</option>
+            <option value="1e9">GFLOPS</option>
+            <option value="1e12" selected>TFLOPS</option>
+            <option value="1e15">PFLOPS</option>
+            <option value="1e18">EFLOPS</option>
+          </select>
+          <button class="btn ghost" id="custom-go" type="button">Use</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="verdict" aria-live="polite">
+      <div class="subject" id="subject"></div>
+      <div>
+        <p class="big" id="big-pre"></p>
+        <div class="year" id="year"></div>
+      </div>
+      <p class="story" id="story"></p>
+      <div class="stats" id="stats"></div>
+      <div class="chartwrap"><svg id="chart" viewBox="0 0 760 360" role="img" aria-label="Fastest computer in the world over time, log scale, with the chosen computer's speed as a dashed line"></svg></div>
+    </section>
+  </div>
+
+  <section class="printout">
+    <h2>Every record holder</h2>
+    <p class="hint">Each row is the moment a new machine (or an upgraded one) took first place. Your computer is slotted in where it would fall, and the highlighted name is the one that finally beat it.</p>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Date</th><th>System</th><th>Where</th><th class="num">Speed</th></tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer>
+    <p>Records from 1993 on are TOP500 Linpack R<sub>max</sub> (FP64), through the June 2026 list. Earlier figures are historical estimates, and the machines before 1954 counted operations rather than floating-point operations.</p>
+    <p>Device speeds are rough estimates. FP64 is sustained double-precision throughput, close to what Linpack would measure. FP32 is the GPU's single-precision spec-sheet peak, compared against the same FP64 records, which flatters modern hardware a lot.</p>
+  </footer>
+</div>
+
+<script>
+(() => {
+  const RECORDS = [
+    ['1941-05', 'Zuse Z3', 'Berlin, Germany', 1],
+    ['1942-01', 'Atanasoff–Berry Computer', 'Iowa State College', 30],
+    ['1944-02', 'Colossus Mk 1', 'Bletchley Park, UK', 5e3],
+    ['1944-06', 'Colossus Mk 2', 'Bletchley Park, UK', 2.5e4],
+    ['1954-12', 'IBM NORC', 'US Navy, Dahlgren', 6.7e4],
+    ['1956-01', 'TX-0', 'MIT Lincoln Laboratory', 8.3e4],
+    ['1958-06', 'IBM AN/FSQ-7 (SAGE)', 'US Air Force', 4e5],
+    ['1960-05', 'UNIVAC LARC', 'Lawrence Livermore', 5e5],
+    ['1961-05', 'IBM 7030 Stretch', 'Los Alamos', 1.2e6],
+    ['1964-09', 'CDC 6600', 'Lawrence Livermore', 3e6],
+    ['1969-01', 'CDC 7600', 'Lawrence Livermore', 3.6e7],
+    ['1974-01', 'CDC STAR-100', 'Lawrence Livermore', 1e8],
+    ['1975-01', 'ILLIAC IV', 'NASA Ames', 1.5e8],
+    ['1976-03', 'Cray-1', 'Los Alamos', 2.5e8],
+    ['1981-01', 'CDC Cyber 205', 'Met Office, UK', 4e8],
+    ['1983-01', 'Cray X-MP/4', 'Los Alamos', 9.41e8],
+    ['1984-01', 'M-13', 'Moscow, USSR', 2.4e9],
+    ['1985-06', 'Cray-2/8', 'Lawrence Livermore', 3.9e9],
+    ['1989-01', 'ETA10-G/8', 'Florida State University', 1.03e10],
+    ['1990-01', 'NEC SX-3/44R', 'NEC Fuchu, Japan', 2.32e10],
+    ['1993-06', 'CM-5/1024', 'Los Alamos', 5.97e10],
+    ['1993-11', 'Numerical Wind Tunnel', 'NAL, Japan', 1.245e11],
+    ['1994-06', 'Intel Paragon XP/S 140', 'Sandia', 1.434e11],
+    ['1994-11', 'Numerical Wind Tunnel', 'NAL, Japan', 1.704e11],
+    ['1996-06', 'Hitachi SR2201/1024', 'University of Tokyo', 2.204e11],
+    ['1996-11', 'CP-PACS/2048', 'University of Tsukuba', 3.682e11],
+    ['1997-06', 'ASCI Red', 'Sandia', 1.068e12],
+    ['1997-11', 'ASCI Red', 'Sandia', 1.338e12],
+    ['1999-06', 'ASCI Red', 'Sandia', 2.121e12],
+    ['2000-11', 'ASCI White', 'Lawrence Livermore', 4.938e12],
+    ['2001-06', 'ASCI White', 'Lawrence Livermore', 7.226e12],
+    ['2002-06', 'Earth Simulator', 'JAMSTEC, Japan', 3.586e13],
+    ['2004-11', 'Blue Gene/L', 'Lawrence Livermore', 7.072e13],
+    ['2005-06', 'Blue Gene/L', 'Lawrence Livermore', 1.368e14],
+    ['2005-11', 'Blue Gene/L', 'Lawrence Livermore', 2.806e14],
+    ['2007-11', 'Blue Gene/L', 'Lawrence Livermore', 4.782e14],
+    ['2008-06', 'Roadrunner', 'Los Alamos', 1.026e15],
+    ['2008-11', 'Roadrunner', 'Los Alamos', 1.105e15],
+    ['2009-11', 'Jaguar', 'Oak Ridge', 1.759e15],
+    ['2010-11', 'Tianhe-1A', 'Tianjin, China', 2.566e15],
+    ['2011-06', 'K computer', 'RIKEN, Japan', 8.162e15],
+    ['2011-11', 'K computer', 'RIKEN, Japan', 1.051e16],
+    ['2012-06', 'Sequoia', 'Lawrence Livermore', 1.632e16],
+    ['2012-11', 'Titan', 'Oak Ridge', 1.759e16],
+    ['2013-06', 'Tianhe-2', 'Guangzhou, China', 3.386e16],
+    ['2016-06', 'Sunway TaihuLight', 'Wuxi, China', 9.301e16],
+    ['2018-06', 'Summit', 'Oak Ridge', 1.223e17],
+    ['2018-11', 'Summit', 'Oak Ridge', 1.435e17],
+    ['2019-06', 'Summit', 'Oak Ridge', 1.486e17],
+    ['2020-06', 'Fugaku', 'RIKEN, Japan', 4.155e17],
+    ['2020-11', 'Fugaku', 'RIKEN, Japan', 4.42e17],
+    ['2022-06', 'Frontier', 'Oak Ridge', 1.102e18],
+    ['2023-06', 'Frontier', 'Oak Ridge', 1.194e18],
+    ['2024-06', 'Frontier', 'Oak Ridge', 1.206e18],
+    ['2024-11', 'El Capitan', 'Lawrence Livermore', 1.742e18],
+    ['2025-11', 'El Capitan', 'Lawrence Livermore', 1.809e18],
+    ['2026-06', 'LineShine', 'Shenzhen, China', 2.198e18],
+  ].map(([d, name, site, flops]) => {
+    const [y, m] = d.split('-').map(Number);
+    return { y, m, t: y + (m - 1) / 12, name, site, flops, top500: d >= '1993-06' };
+  });
+  const NOW = 2026 + 9 / 12;
+  const CURRENT = RECORDS[RECORDS.length - 1];
+
+  const PRESETS = [
+    { id: 'neo', name: 'MacBook Neo', spec: 'Apple A18 Pro · 6-core CPU, 5-core GPU · 8 GB', year: 2026, fp64: 1.2e11, fp32: 1.8e12, tag: 'made on this' },
+    { id: 'eniac', name: 'ENIAC', spec: 'About 5,000 additions a second; Colossus was still secret', year: 1946, fp64: 5e3, fp32: 5e3 },
+    { id: 'agc', name: 'Apollo Guidance Computer', spec: 'About 40,000 ops a second, no floating point', year: 1966, fp64: 4e4, fp32: 4e4 },
+    { id: 'cray1', name: 'Cray-1', spec: '80 MHz vector machine, 64-bit floats only', year: 1976, fp64: 2.5e8, fp32: 2.5e8 },
+    { id: 'ibmpc', name: 'IBM PC with 8087', spec: '8088 at 4.77 MHz plus maths coprocessor', year: 1981, fp64: 5e4, fp32: 5e4 },
+    { id: 'c64', name: 'Commodore 64', spec: 'MOS 6510 at 1 MHz, BASIC floating point', year: 1982, fp64: 400, fp32: 400 },
+    { id: 'mac128', name: 'Macintosh 128K', spec: 'Motorola 68000 at 8 MHz, no FPU, software floating point', year: 1984, fp64: 3e3, fp32: 3e3 },
+    { id: 'genesis', name: 'Sega Genesis', spec: 'Motorola 68000 at 7.67 MHz, software floating point', year: 1988, fp64: 4e3, fp32: 1.5e4 },
+    { id: 'gameboy', name: 'Game Boy', spec: 'Sharp LR35902 at 4.19 MHz, floating point done in software', year: 1989, fp64: 1e4, fp32: 1e4 },
+    { id: 'snes', name: 'Super Nintendo', spec: 'Ricoh 5A22 at 3.58 MHz, software floating point', year: 1990, fp64: 1e3, fp32: 2e3 },
+    { id: 'i486', name: 'PC with Intel 486DX', spec: '33 MHz, on-chip floating point', year: 1990, fp64: 1e6, fp32: 1.5e6 },
+    { id: 'n64', name: 'Nintendo 64', spec: 'NEC VR4300 at 93.75 MHz with FPU', year: 1996, fp64: 3e7, fp32: 1e8 },
+    { id: 'p3', name: 'PC with Pentium III', spec: '500 MHz, SSE for single precision', year: 1999, fp64: 4e8, fp32: 2e9 },
+    { id: 'ps2', name: 'PlayStation 2', spec: 'Emotion Engine, vector units', year: 2000, fp64: 3e8, fp32: 6.2e9 },
+    { id: 'p4', name: 'PC with Pentium 4', spec: '3 GHz Northwood, SSE2', year: 2002, fp64: 3e9, fp32: 1.2e10 },
+    { id: 'x360', name: 'Xbox 360', spec: 'Xenon CPU, Xenos GPU', year: 2005, fp64: 1e10, fp32: 2.4e11 },
+    { id: 'ps3', name: 'PlayStation 3', spec: 'Cell Broadband Engine', year: 2006, fp64: 1.5e10, fp32: 2.3e11 },
+    { id: 'iphone', name: 'iPhone, first model', spec: 'ARM11 at 412 MHz', year: 2007, fp64: 5e7, fp32: 2e8 },
+    { id: 'switch', name: 'Nintendo Switch', spec: 'Tegra X1, docked', year: 2017, fp64: 5e9, fp32: 3.93e11 },
+    { id: 'm1', name: 'MacBook Air M1', spec: '8-core CPU, 8-core GPU', year: 2020, fp64: 1e11, fp32: 2.6e12 },
+    { id: 'ps5', name: 'PlayStation 5', spec: 'Zen 2 CPU, RDNA 2 GPU', year: 2020, fp64: 2.5e11, fp32: 1.03e13 },
+    { id: 'deck', name: 'Steam Deck', spec: 'AMD APU, 4 Zen 2 cores, RDNA 2 GPU', year: 2022, fp64: 8e10, fp32: 1.6e12 },
+    { id: 'rtx', name: 'Gaming PC with RTX 4090', spec: 'GPU FP64 runs at 1/64 rate', year: 2022, fp64: 1.3e12, fp32: 8.26e13 },
+    { id: 'h100', name: 'NVIDIA H100', spec: 'One data-centre GPU', year: 2022, fp64: 5e13, fp32: 6.7e13 },
+    { id: 'pi5', name: 'Raspberry Pi 5', spec: '4 × Cortex-A76 at 2.4 GHz', year: 2023, fp64: 3e10, fp32: 6e10 },
+    { id: 'm4max', name: 'MacBook Pro M4 Max', spec: '16-core CPU, 40-core GPU', year: 2024, fp64: 4e11, fp32: 1.7e13 },
+    { id: 'iphone16', name: 'iPhone 16', spec: 'Apple A18 · 6-core CPU, 5-core GPU', year: 2024, fp64: 1.1e11, fp32: 1.8e12 },
+    { id: 'iphone16pro', name: 'iPhone 16 Pro', spec: 'Apple A18 Pro · 6-core CPU, 6-core GPU', year: 2024, fp64: 1.2e11, fp32: 2.2e12 },
+    { id: 'nvl72', name: 'GB200 NVL72 rack', spec: '72 Blackwell GPUs in one cabinet', year: 2024, fp64: 2.2e15, fp32: 5.8e15 },
+    { id: 'rtx5090', name: 'Gaming PC with RTX 5090', spec: 'Blackwell consumer GPU', year: 2025, fp64: 1.6e12, fp32: 1.05e14 },
+  ];
+
+  const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+  function fmt(f) {
+    const units = [['EFLOPS', 1e18], ['PFLOPS', 1e15], ['TFLOPS', 1e12], ['GFLOPS', 1e9], ['MFLOPS', 1e6], ['kFLOPS', 1e3], ['FLOPS', 1]];
+    for (const [n, v] of units) {
+      if (f >= v * 0.9995) {
+        const x = f / v;
+        let s = x >= 100 ? x.toFixed(1) : x >= 10 ? x.toFixed(1) : x.toFixed(2);
+        if (s.includes('.')) s = s.replace(/0+$/, '').replace(/\.$/, '');
+        return s + ' ' + n;
+      }
+    }
+    return f.toPrecision(2) + ' FLOPS';
+  }
+  function times(x) {
+    if (x >= 1e6) return new Intl.NumberFormat('en', { notation: 'compact', maximumFractionDigits: 1 }).format(x);
+    if (x >= 100) return Math.round(x).toLocaleString('en');
+    if (x >= 10) return x.toFixed(0);
+    return x.toFixed(1).replace(/\.0$/, '');
+  }
+
+  let state = { mode: 'fp64', sel: 'neo', custom: 1e12, bench: null };
+  try {
+    const saved = JSON.parse(localStorage.getItem('fastest-until') || 'null');
+    if (saved && typeof saved === 'object') state = Object.assign(state, saved);
+  } catch (e) {}
+  function save() { try { localStorage.setItem('fastest-until', JSON.stringify(state)); } catch (e) {} }
+
+  function current() {
+    if (state.sel === 'custom') return { name: 'Your number', spec: 'Typed in', flops: state.custom, modeFree: true };
+    if (state.sel === 'bench' && state.bench) return { name: 'This browser', spec: state.bench.spec, flops: state.bench.flops, modeFree: true };
+    const p = PRESETS.find((x) => x.id === state.sel) || PRESETS[0];
+    return { name: p.name, spec: p.spec, flops: p[state.mode] };
+  }
+
+  function renderList() {
+    $('list').innerHTML = PRESETS.map((p) => `
+      <button type="button" class="item" data-id="${p.id}" aria-pressed="${state.sel === p.id}">
+        <span class="nm">${esc(p.name)}${p.tag ? `<span class="tag">${esc(p.tag)}</span>` : ''}</span>
+        <span class="yr">${p.year}</span>
+        <span class="sp">${esc(p.spec)} · ~${fmt(p[state.mode])}</span>
+      </button>`).join('');
+    $('mode-fp64').setAttribute('aria-pressed', state.mode === 'fp64');
+    $('mode-fp32').setAttribute('aria-pressed', state.mode === 'fp32');
+    $('custom-box').classList.toggle('active', state.sel === 'custom');
+    $('bench-box').classList.toggle('active', state.sel === 'bench');
+  }
+
+  function render() {
+    renderList();
+    const c = current();
+    const F = c.flops;
+    const idx = RECORDS.findIndex((r) => r.flops > F);
+    const beat = idx === -1 ? null : RECORDS[idx];
+    const prev = idx > 0 ? RECORDS[idx - 1] : idx === -1 ? CURRENT : null;
+    const how = c.modeFree ? 'measured or typed' : state.mode === 'fp64' ? 'FP64 sustained' : 'FP32 peak';
+
+    $('subject').innerHTML = `<b>${esc(c.name)}</b> · ${esc(c.spec)} · ~${fmt(F)} (${how})`;
+
+    const yearEl = $('year');
+    yearEl.classList.remove('word');
+    if (!beat) {
+      $('big-pre').textContent = 'Still the fastest computer on Earth.';
+      yearEl.textContent = 'Today';
+      yearEl.classList.add('word');
+      $('story').innerHTML = `It beats <em>${esc(CURRENT.name)}</em> (${fmt(CURRENT.flops)}), the No. 1 on the June 2026 TOP500 list. Time to submit a Linpack run.`;
+    } else if (idx === 0) {
+      $('big-pre').textContent = 'Never the fastest computer on Earth.';
+      yearEl.textContent = 'Never';
+      yearEl.classList.add('word');
+      $('story').innerHTML = `Even Konrad Zuse's relay-built Z3 (1941) managed about one operation a second.`;
+    } else {
+      $('big-pre').textContent = 'Fastest computer on Earth until';
+      yearEl.textContent = beat.y;
+      const same = prev && prev.name === beat.name;
+      $('story').innerHTML = same
+        ? `In ${MONTHS[beat.m - 1]} ${beat.y}, an upgraded <em>${esc(beat.name)}</em> at ${esc(beat.site)} reached ${fmt(beat.flops)} and finally pulled ahead. Before that, it would have outrun every machine ever built.`
+        : `In ${MONTHS[beat.m - 1]} ${beat.y}, <em>${esc(beat.name)}</em> at ${esc(beat.site)} hit ${fmt(beat.flops)} and took the title. Before that, it would have outrun every machine ever built, including the ${esc(prev.name)} (${fmt(prev.flops)}).`;
+    }
+
+    const stats = [];
+    if (beat && idx > 0) {
+      stats.push([times(NOW - beat.t) + ' yrs', `of supercomputer progress since it lost the title`]);
+      stats.push([times(F / prev.flops) + '×', `faster than ${prev.name}, the No. 1 it would have dethroned`]);
+    } else if (!beat) {
+      stats.push([times(F / CURRENT.flops) + '×', `faster than ${CURRENT.name}`]);
+    }
+    const copies = CURRENT.flops / F;
+    stats.push(copies <= 1 ? ['1', 'copy is enough to top the TOP500 today'] : [times(Math.ceil(copies)), `of these, networked perfectly, would match ${CURRENT.name} today`]);
+    if (stats.length < 3 && idx === 0) stats.unshift(['0 yrs', 'at the top, at any point in history']);
+    if (stats.length < 3) stats.splice(1, 0, [String(RECORDS.length), 'record holders since 1941']);
+    $('stats').innerHTML = stats.slice(0, 3).map(([v, k]) => `<div class="stat"><div class="v">${esc(v)}</div><div class="k">${esc(k)}</div></div>`).join('');
+
+    renderChart(F, idx);
+    renderTable(c, F, idx);
+  }
+
+  function renderChart(F, idx) {
+    const W = 760, H = 360, L = 74, R = 14, T = 16, B = 34;
+    const x0 = 1940, x1 = 2027.5, yMin = 0, yMax = 19;
+    const X = (t) => L + (t - x0) / (x1 - x0) * (W - L - R);
+    const Y = (f) => T + (1 - (Math.log10(Math.max(f, 1)) - yMin) / (yMax - yMin)) * (H - T - B);
+    let s = '';
+    // TOP500 era background
+    s += `<rect class="era" x="${X(1993.42)}" y="${T}" width="${X(x1) - X(1993.42)}" height="${H - T - B}"/>`;
+    s += `<text class="eralabel" x="${X(1993.42) + 6}" y="${T + 13}">TOP500 ERA</text>`;
+    const labels = { 0: '1 FLOPS', 3: '1 kFLOPS', 6: '1 MFLOPS', 9: '1 GFLOPS', 12: '1 TFLOPS', 15: '1 PFLOPS', 18: '1 EFLOPS' };
+    for (let e = 0; e <= 18; e += 3) {
+      s += `<line class="grid" x1="${L}" x2="${W - R}" y1="${Y(10 ** e)}" y2="${Y(10 ** e)}"/>`;
+      s += `<text x="${L - 8}" y="${Y(10 ** e) + 4}" text-anchor="end">${labels[e]}</text>`;
+    }
+    for (let yr = 1940; yr <= 2020; yr += 10) {
+      s += `<line class="grid" x1="${X(yr)}" x2="${X(yr)}" y1="${H - B}" y2="${H - B + 5}"/>`;
+      s += `<text x="${X(yr)}" y="${H - B + 19}" text-anchor="middle">${yr}</text>`;
+    }
+    s += `<line class="grid" x1="${L}" x2="${W - R}" y1="${H - B}" y2="${H - B}" style="stroke:var(--ink)"/>`;
+
+    // highlighter band: where your machine would be No. 1
+    const until = idx === -1 ? x1 : idx === 0 ? x0 : RECORDS[idx].t;
+    if (until > x0) s += `<rect class="hl" x="${L}" y="${Y(F) - 6}" width="${X(until) - L}" height="12"/>`;
+
+    // record step line
+    let d = '';
+    RECORDS.forEach((r, i) => {
+      d += i === 0 ? `M${X(r.t)},${Y(r.flops)}` : `H${X(r.t)}V${Y(r.flops)}`;
+    });
+    d += `H${X(NOW)}`;
+    s += `<path class="step" d="${d}"/>`;
+    RECORDS.forEach((r) => { s += `<circle class="dot" cx="${X(r.t)}" cy="${Y(r.flops)}" r="2.6"/>`; });
+
+    // milestones
+    const miles = [['Cray-1', 1976.17, 2.5e8], ['ASCI Red · first TFLOPS', 1997.42, 1.068e12], ['Roadrunner · first PFLOPS', 2008.42, 1.026e15], ['Frontier · first EFLOPS', 2022.42, 1.102e18]];
+    miles.forEach(([n, t, f]) => { s += `<text class="mile" x="${X(t) - 6}" y="${Y(f) - 9}" text-anchor="end">${n}</text>`; });
+
+    // your machine
+    s += `<line class="you" x1="${L}" x2="${W - R}" y1="${Y(F)}" y2="${Y(F)}"/>`;
+    if (idx > 0) {
+      const hx = X(until), hy = Y(F);
+      s += `<line class="you" x1="${hx}" x2="${hx}" y1="${hy}" y2="${H - B}" style="stroke-dasharray:2 3;stroke-width:1.25"/>`;
+      s += `<circle class="hit" cx="${hx}" cy="${hy}" r="5"/>`;
+      const right = hx < W - 160;
+      s += `<text class="hitlabel" x="${hx + (right ? 10 : -10)}" y="${hy + 18}" text-anchor="${right ? 'start' : 'end'}">overtaken ${MONTHS[RECORDS[idx].m - 1].slice(0, 3)} ${RECORDS[idx].y}</text>`;
+    } else {
+      s += `<text class="hitlabel" x="${W - R - 4}" y="${Y(F) - 8}" text-anchor="end">${idx === -1 ? 'still No. 1' : 'never No. 1'}</text>`;
+    }
+    $('chart').innerHTML = s;
+  }
+
+  function renderTable(c, F, idx) {
+    const rows = [];
+    let band = 0;
+    const pushRec = (r, i) => {
+      const cls = [Math.floor(band / 3) % 2 === 0 ? 'band' : '', i === idx ? 'beat' : ''].join(' ').trim();
+      band++;
+      rows.push(`<tr class="${cls}"><td>${r.y}-${String(r.m).padStart(2, '0')}</td><td>${esc(r.name)}</td><td>${esc(r.site)}</td><td class="num">${fmt(r.flops)}</td></tr>`);
+    };
+    const you = `<tr class="yours"><td>◀ ◀ ◀</td><td>${esc(c.name)}</td><td>would be No. 1 here</td><td class="num">${fmt(F)}</td></tr>`;
+    RECORDS.forEach((r, i) => {
+      if (r.top500 && !RECORDS[i - 1].top500) {
+        rows.push(`<tr class="divider"><td colspan="4">TOP500 BEGINS · LINPACK RMAX FROM HERE ON</td></tr>`);
+        band = 0;
+      }
+      if (i === idx && idx > 0) rows.push(you);
+      pushRec(r, i);
+    });
+    if (idx === -1) rows.push(you);
+    $('tbody').innerHTML = rows.join('');
+  }
+
+  // ---------- events ----------
+  $('list').addEventListener('click', (e) => {
+    const b = e.target.closest('.item');
+    if (!b) return;
+    state.sel = b.dataset.id; save(); render();
+  });
+  $('mode-fp64').addEventListener('click', () => { state.mode = 'fp64'; if (state.sel === 'custom' || state.sel === 'bench') state.sel = 'neo'; save(); render(); });
+  $('mode-fp32').addEventListener('click', () => { state.mode = 'fp32'; if (state.sel === 'custom' || state.sel === 'bench') state.sel = 'neo'; save(); render(); });
+  function useCustom() {
+    const v = parseFloat($('custom-val').value);
+    if (!(v > 0)) { $('custom-val').focus(); return; }
+    state.custom = v * Number($('custom-unit').value);
+    state.sel = 'custom'; save(); render();
+  }
+  $('custom-go').addEventListener('click', useCustom);
+  $('custom-val').addEventListener('keydown', (e) => { if (e.key === 'Enter') useCustom(); });
+
+  // ---------- browser benchmark ----------
+  function benchLoop(ms) {
+    let a0 = 1.1, a1 = 1.2, a2 = 1.3, a3 = 1.4, a4 = 1.5, a5 = 1.6, a6 = 1.7, a7 = 1.8;
+    const m = 0.999999999, c = 1e-9;
+    let n = 0; const t0 = performance.now(); let t = t0;
+    do {
+      for (let i = 0; i < 250000; i++) {
+        a0 = a0 * m + c; a1 = a1 * m + c; a2 = a2 * m + c; a3 = a3 * m + c;
+        a4 = a4 * m + c; a5 = a5 * m + c; a6 = a6 * m + c; a7 = a7 * m + c;
+      }
+      n += 250000; t = performance.now();
+    } while (t - t0 < ms);
+    return { flops: n * 16 / ((t - t0) / 1000), sink: a0 + a1 + a2 + a3 + a4 + a5 + a6 + a7 };
+  }
+  const WORKER = `const run = ${benchLoop.toString()}; onmessage = (e) => postMessage(run(e.data));`;
+
+  $('bench').addEventListener('click', async () => {
+    const btn = $('bench');
+    const cores = Math.max(1, Math.min(navigator.hardwareConcurrency || 4, 32));
+    btn.disabled = true;
+    btn.textContent = `Measuring on ${cores} cores…`;
+    $('bench-out').textContent = '';
+    let total = 0, used = cores;
+    try {
+      const url = URL.createObjectURL(new Blob([WORKER], { type: 'text/javascript' }));
+      const results = await Promise.all(Array.from({ length: cores }, () => new Promise((res, rej) => {
+        const w = new Worker(url);
+        w.onmessage = (e) => { res(e.data.flops); w.terminate(); };
+        w.onerror = (err) => { rej(err); w.terminate(); };
+        w.postMessage(2000);
+      })));
+      URL.revokeObjectURL(url);
+      total = results.reduce((a, b) => a + b, 0);
+    } catch (err) {
+      // Workers unavailable: measure one core on the main thread instead.
+      used = 1;
+      total = benchLoop(1200).flops;
+    }
+    state.bench = { flops: total, spec: `JavaScript FP64 on ${used} core${used > 1 ? 's' : ''}` };
+    state.sel = 'bench';
+    $('bench-out').textContent = `Measured ${fmt(total)} across ${used} core${used > 1 ? 's' : ''}.`;
+    btn.disabled = false;
+    btn.textContent = 'Run again';
+    save(); render();
+  });
+
+  if (state.sel === 'bench' && !state.bench) state.sel = 'neo';
+  if (state.bench) $('bench-out').textContent = `Last run: ${fmt(state.bench.flops)}.`;
+  render();
+})();
+</script>
+
+</body>
+</html>
